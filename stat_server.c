@@ -1,7 +1,14 @@
 #include "stat_server.h"
 
 int main(int argc, char *argv[]) {
-  int key;
+  int key = -1;
+
+  if (argc != 3) {
+    fprintf(stderr, "Usage: stat_server -k key\n");
+    exit(1);
+  }
+
+  //Parse & extract key from command line opts
   int c;
   while ((c = getopt(argc, argv, "k:")) != -1) {
     switch (c) {
@@ -16,8 +23,8 @@ int main(int argc, char *argv[]) {
       exit(1);
     }
   }
-
-  int shmid = create_shared_segment(12345);
+  
+  int shmid = create_shared_segment(key);
 
   printf("shmid = %d\n", shmid);
   

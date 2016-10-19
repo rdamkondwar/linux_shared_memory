@@ -8,7 +8,7 @@
 #include <ctype.h>
 
 //Util func signatures.
-int parseKey(int *key, char *keys);
+int parseKey(int *, char*);
 
 //Stat server func signatures.
 int create_shared_segment(int key);
