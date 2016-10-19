@@ -1,7 +1,11 @@
 #include <unistd.h>
 #include <stdio.h>
 
+long getPageSize(void) {
+  return sysconf(_SC_PAGESIZE);
+}
+
 int main(int argc, char *argv[]) {
-  long sz = sysconf(_SC_PAGESIZE);
-  printf("Pagesize = %ld\n", sz);
+  printf("Pagesize = %ld\n", getPageSize());
+  return 0;
 }
