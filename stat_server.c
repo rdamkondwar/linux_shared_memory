@@ -54,9 +54,9 @@ int main(int argc, char *argv[]) {
 void read_segment(segment_meta_t *shared_seg) {
   // Read first int
   printf("init = %d\n", shared_seg->init_status);
-  // Read 16 ints
+  // Read MAX_CLIENT_COUNT ints
   int i;
-  for (i=0; i < MAX_CLIENT_COUNT; i++) {
+  for (i = 0; i < MAX_CLIENT_COUNT; i++) {
     int val = shared_seg->client_status[i];
     if (val > 0) {
       printf("child %d = %d\n", i+1, val);
@@ -68,14 +68,12 @@ segment_meta_t* initialize_segment(char *addr) {
   segment_meta_t *shared_seg = (segment_meta_t *)addr;
   // Put 1 as first int
   shared_seg->init_status = 1;
-
   addr+=sizeof(int);
 
   int i;
   for (i = 0; i < MAX_CLIENT_COUNT; i++) {
     shared_seg->client_status[i] = 0;
   }
-
   shared_seg->head = addr + sizeof(segment_meta_t);
 
   // 2 implies init complete
