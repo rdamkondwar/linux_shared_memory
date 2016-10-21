@@ -32,6 +32,7 @@ long getPageSize(void);
 int create_shared_segment(int key);
 char* attach_shared_segment(int shmid);
 segment_meta_t* initialize_segment(char *addr);
+int get_shared_segment(int);
 void read_segment(segment_meta_t *);
 void cleanup();
 void init_s_handler(struct sigaction *);
