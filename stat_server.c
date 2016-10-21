@@ -7,7 +7,7 @@ int main(int argc, char *argv[]) {
   //Set up SIGINT handler
   struct sigaction act;
   init_s_handler(&act);
-  
+
   int key = -1;
   if (argc != 3) {
     fprintf(stderr, "Usage: stat_server -k key\n");
@@ -34,29 +34,26 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "Usage: stat_server -k key\n");
     exit(1);
   }
-  
-  ssegment.shmid = create_shared_segment(key);
 
+  ssegment.shmid = create_shared_segment(key);
   printf("shmid = %d\n", ssegment.shmid);
 
-  // sleep(10);
   ssegment.addr = attach_shared_segment(ssegment.shmid);
   printf("attached to segment\n");
-  
+
   shared_seg = initialize_segment(ssegment.addr);
-  
+
   while (TRUE) {
     read_segment(shared_seg);
     sleep(1);
   }
-  // sleep(10);
+
   return 0;
 }
 
 void read_segment(segment_meta_t *shared_seg) {
   // Read first int
   printf("init = %d\n", shared_seg->init_status);
-  // addr += sizeof(int);
   // Read 16 ints
   int i;
   for (i=0; i < MAX_CLIENT_COUNT; i++) {
@@ -64,33 +61,24 @@ void read_segment(segment_meta_t *shared_seg) {
     if (val > 0) {
       printf("child %d = %d\n", i+1, val);
     }
-    // addr += sizeof(int);
   }
 }
 
 segment_meta_t* initialize_segment(char *addr) {
-
   segment_meta_t *shared_seg = (segment_meta_t *)addr;
-
-  // int *init_complete = (int *) addr;
-  // *init_complete = 1;
-  
   // Put 1 as first int
   shared_seg->init_status = 1;
 
   addr+=sizeof(int);
 
   int i;
-  for (i=0; i < 16; i++) {
+  for (i = 0; i < MAX_CLIENT_COUNT; i++) {
     shared_seg->client_status[i] = 0;
-    //*((int *)addr) = 0;
-    //addr += sizeof(int);
   }
 
   shared_seg->head = addr + sizeof(segment_meta_t);
 
   // 2 implies init complete
-  //*init_complete = 2;
   shared_seg->init_status = 2;
   return shared_seg;
 }
@@ -101,7 +89,6 @@ char* attach_shared_segment(int shmid) {
     perror("shmat: \n");
     exit(1);
   }
-  // printf("p = %c\n", *p);
   return p;
 }
 
@@ -112,7 +99,6 @@ int create_shared_segment(int key) {
     perror("Error: Failed to get shared mem segment.");
     exit(1);
   }
-  
   return shmid;
 }
 
@@ -130,7 +116,7 @@ void cleanup() {
       perror("Error");
       exit(1);
     }
-    
+
     printf("Deleting shared segment\n");
     //delete segment
     if (shmctl(ssegment.shmid, IPC_RMID, NULL) < 0) {
