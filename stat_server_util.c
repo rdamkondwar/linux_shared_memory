@@ -18,3 +18,7 @@ int parseKey(int *key, char *keystr) {
   }
   return -1;
 }
+
+long getPageSize(void) {
+  return sysconf(_SC_PAGESIZE);
+}
