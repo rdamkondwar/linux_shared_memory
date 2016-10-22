@@ -93,7 +93,7 @@ void cleanup() {
     }
     
     printf("Deleting semaphore\n");
-    // unlink semaphore
+    // unlink semaphore    
     if (sem_unlink(sem_name) < 0) {
       perror("Error");
       exit(1);
@@ -104,4 +104,14 @@ void cleanup() {
 void init_s_handler(struct sigaction *act) {
   act->sa_handler = sigint_handler;
   sigaction(SIGINT, act, NULL);
+}
+
+sem_t* init_semaphore(int key) {
+  get_semaphore_name(key, sem_name);
+  sem_t *semaphore = sem_open(sem_name, O_CREAT | O_EXCL, 0644, 1);
+  if (SEM_FAILED == semaphore) {
+    perror("Error");
+    exit(1);
+  }
+  return semaphore;
 }

@@ -6,7 +6,7 @@
 #include <unistd.h>
 
 int main(int argc, char *argv[]) {
-  sem_t *sem1 = sem_open(argv[1], O_CREAT, 0644, 1);
+  sem_t *sem1 = sem_open(argv[1], 0, 0644, 1);
   printf("Got semaphore\n");
   
   if (SEM_FAILED == sem1) {
@@ -14,12 +14,16 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
+
+
   int ret = sem_wait(sem1);
   if (ret == -1) {
     perror("Error");
     exit(1);
   }
   printf("waited for semaphore\n");
+
+  sleep(10);
 
   ret = sem_post(sem1);
   if (ret == -1) {
@@ -29,17 +33,17 @@ int main(int argc, char *argv[]) {
 
   printf("posted semaphore\n");
 
-  ret = sem_close(sem1);
-  if (ret == -1) {
-    perror("Error");
-    exit(1);
-  }
+  /* ret = sem_close(sem1); */
+  /* if (ret == -1) { */
+  /*   perror("Error"); */
+  /*   exit(1); */
+  /* } */
 
-  ret = sem_unlink(argv[1]);
-  if (ret == -1) {
-    perror("Error");
-    exit(1);
-  }
+  /* ret = sem_unlink(argv[1]); */
+  /* if (ret == -1) { */
+  /*   perror("Error"); */
+  /*   exit(1); */
+  /* } */
 
   
   printf("closed semaphore\n");
