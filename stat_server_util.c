@@ -1,5 +1,17 @@
 #include "stat_server.h"
 
+extern char sem_name[];
+
+sem_t* init_semaphore(int key) {
+  sprintf(sem_name, "%d", key);
+  sem_t *semaphore = sem_open(sem_name, O_CREAT | O_EXCL, 0644, 1);
+  if (SEM_FAILED == semaphore) {
+    perror("Error");
+    exit(1);
+  }
+  return semaphore;
+}
+
 void read_segment(segment_meta_t *shared_seg) {
   // Read first int
   printf("init = %d\n", shared_seg->init_status);

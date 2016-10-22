@@ -1,7 +1,8 @@
-#include "stats.h"
 #include "stat_server.h"
 
-stats_t* stat_init(key_t key);
+extern sem_t *semaphore;
+
+// stats_t* stat_init(key_t key);
 int stat_unlink(key_t key);
 int find_empty_child_slot(int client_status[]);
 
@@ -11,6 +12,12 @@ stats_t* stat_int(key_t key) {
 
   segment_meta_t *s_seg = (segment_meta_t *)addr;
   if (s_seg->init_status == 2) {
+    //Acquire lock
+    if (sem_wait(semaphore) < 1) {
+      fprintf(stderr, "Sem_wait failed!\n");
+      return NULL;
+    }
+    
     int index = find_empty_child_slot(s_seg->client_status);
     if (index == -1) {
       fprintf(stderr, "Max Client Processes reached.\n");
@@ -18,6 +25,13 @@ stats_t* stat_int(key_t key) {
     }
 
     s_seg->client_status[index] = 1;
+    
+    //Release lock
+    if (sem_post(semaphore) < 1) {
+      fprintf(stderr, "Sem_post failed!\n");
+      return NULL;
+    }
+    
     return s_seg->head + index*sizeof(stats_t);
   }
 

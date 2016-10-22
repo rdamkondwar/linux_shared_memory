@@ -1,7 +1,14 @@
 #include "stat_server.h"
 
+// Metadata struct to hold segment initial data
 segment_meta_t *shared_seg = NULL;
+
+// Struct to hold shared segment access info
 ssegment_t ssegment;
+
+// Semaphore used by clients
+sem_t *semaphore;
+char sem_name[1024];
 
 int main(int argc, char *argv[]) {
   //Set up SIGINT handler
@@ -43,6 +50,9 @@ int main(int argc, char *argv[]) {
 
   shared_seg = initialize_segment(ssegment.addr);
 
+  //Initialize semaphore
+  semaphore = init_semaphore(key);
+
   while (TRUE) {
     read_segment(shared_seg);
     sleep(1);
@@ -60,15 +70,31 @@ void sigint_handler(int signum) {
 void cleanup() {
   if (NULL != shared_seg) {
     printf("Detaching shared segment\n");
-    //detach segment
+    // detach segment
     if (shmdt(ssegment.addr) < 0) {
       perror("Error");
       exit(1);
     }
 
     printf("Deleting shared segment\n");
-    //delete segment
+    // delete segment
     if (shmctl(ssegment.shmid, IPC_RMID, NULL) < 0) {
+      perror("Error");
+      exit(1);
+    }
+  }
+
+  if (NULL != semaphore) {
+    printf("Closing semaphore\n");
+    // unlink semaphore
+    if (sem_close(semaphore) < 0) {
+      perror("Error");
+      exit(1);
+    }
+    
+    printf("Deleting semaphore\n");
+    // unlink semaphore
+    if (sem_unlink(sem_name) < 0) {
       perror("Error");
       exit(1);
     }

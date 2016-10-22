@@ -9,6 +9,10 @@
 #include <sys/types.h>
 #include <sys/shm.h>
 #include <signal.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <semaphore.h>
+#include "stats.h"
 
 #define MAX_CLIENT_COUNT 16
 #define TRUE 1
@@ -36,3 +40,5 @@ int get_shared_segment(int);
 void read_segment(segment_meta_t *);
 void cleanup();
 void init_s_handler(struct sigaction *);
+sem_t* init_semaphore(int key);
+stats_t* stat_int(key_t key);
