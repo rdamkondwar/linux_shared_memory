@@ -53,8 +53,8 @@ char* attach_shared_segment(int shmid);
 segment_meta_t* initialize_segment(char *addr);
 int get_shared_segment(int);
 int read_segment(segment_meta_t *, int server_iter);
-sem_t* init_semaphore(int key);
-sem_t* get_semaphore(int key);
+void init_semaphore(int key);
+void get_semaphore(int key);
 
 //stats.c
 stats_t* stat_init(key_t key);

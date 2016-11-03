@@ -8,8 +8,8 @@ ssegment_t ssegment;
 ssegment_t *shm;
 
 // Semaphore used by clients
-sem_t *semaphore;
-char sem_name[1024];
+extern sem_t *semaphore;
+extern char sem_name[1024];
 
 int main(int argc, char *argv[]) {
   // Set up SIGINT handler
@@ -53,10 +53,10 @@ int main(int argc, char *argv[]) {
 
   shared_seg = initialize_segment(ssegment.addr);
 
-  semaphore = init_semaphore(key);
-  get_semaphore_name(key, sem_name);
+  init_semaphore(key);
+  // get_semaphore_name(key, sem_name);
 
-  sem_post(semaphore);
+  // sem_post(semaphore);
 
   while (TRUE) {
     inuse = read_segment(shared_seg, server_count);
@@ -84,12 +84,12 @@ void cleanup() {
   }*/
 
   if (NULL != shared_seg) {
-    /*printf("Detaching shared segment\n");
+    // printf("Detaching shared segment\n");
     //  detach segment
     if (shmdt(ssegment.addr) < 0) {
       perror("Error");
       exit(1);
-    }*/
+    }
 
     // printf("Deleting shared segment\n");
     // delete segment
@@ -100,12 +100,12 @@ void cleanup() {
   }
 
   if (NULL != semaphore) {
-    /*printf("Closing semaphore\n");
+    // printf("Closing semaphore\n");
     // unlink semaphore
     if (sem_close(semaphore) < 0) {
       perror("Error");
       exit(1);
-    }*/
+    }
 
     // printf("Deleting semaphore\n");
     // unlink semaphore
@@ -117,17 +117,7 @@ void cleanup() {
 }
 
 void init_s_handler(struct sigaction *act) {
+  memset (act, '\0', sizeof(*act));
   act->sa_handler = sigint_handler;
   sigaction(SIGINT, act, NULL);
-}
-
-
-sem_t* init_semaphore(int key) {
-  get_semaphore_name(key, sem_name);
-  sem_t *semaphore = sem_open(sem_name, O_CREAT | O_EXCL, 0644, 1);
-  if (SEM_FAILED == semaphore) {
-    perror("Error");
-    exit(1);
-  }
-  return semaphore;
 }

@@ -1,6 +1,6 @@
 #include "stats_server.h"
 
-sem_t *semaphore;
+// sem_t *semaphore;
 ssegment_t *shm;
 int key;
 
@@ -61,7 +61,8 @@ int main(int argc, char *argv[]) {
   // Parse & extract key from command line opts
   int c, priority;
   long sleeptime_ns, cputime_ns;
-  key =  priority = -1;
+  key = -1;
+  priority = -21;
   sleeptime_ns = cputime_ns = -1;
 
   while ((c = getopt(argc, argv, "k:p:s:c:")) != -1) {
@@ -106,10 +107,10 @@ int main(int argc, char *argv[]) {
   /*   priority = 10; */
   /* } */
   if (sleeptime_ns == -1) {
-    sleeptime_ns = 1000000L;
+    sleeptime_ns = 10000000L;
   }
   if (cputime_ns == -1) {
-    cputime_ns = 1000000L;
+    cputime_ns = 500000000L;
   }
 
   // printf("CMD : %s -k %d -p %d -s %ld -c %ld\n", argv[0], key, priority,
@@ -136,7 +137,7 @@ int main(int argc, char *argv[]) {
   // printf("key = %d\n", key);
 
   // Get semaphore
-  semaphore = get_semaphore(key);
+  // semaphore = get_semaphore(key);
   // printf("got semaphore\n");
 
   stats_t * c_stats = stat_init((key_t)key);
@@ -147,7 +148,7 @@ int main(int argc, char *argv[]) {
 
   // Set Priority
   pid = getpid();
-  if (priority > -1) {
+  if (priority > -21) {
     set_prio_ret = setpriority(which, pid, priority);
     if (set_prio_ret != 0) {
       fprintf(stderr, "Couldn't set the priority %d \n", priority);
@@ -169,7 +170,8 @@ int main(int argc, char *argv[]) {
   while (TRUE) {
     // printf("Sleeping!\n");
     nanosleep(&sleeptime, NULL);
-    c_stats->counter++;
+
+
     // CPU Time
     actual_cputime = looptime(cputime);
     cumulative_cputime += actual_cputime;
@@ -179,7 +181,7 @@ int main(int argc, char *argv[]) {
     // Priority
     get_prio_ret = getpriority(which, pid);
     c_stats->priority = get_prio_ret;
-
+    c_stats->counter++;
     /*printf("PID: %d ||Name: %s ||Cnt: %d || Prio: %d\n"
             "CumulCPUt(s): %f ||Actual CPUt: %llu\n",
             c_stats->pid, c_stats->process_name, c_stats->counter,\
@@ -199,10 +201,11 @@ void sigint_handler(int signum) {
   // printf("in signal handler\n");
   stats_unlink((key_t) key);
   // printf("unlink_ret : %d\n", unlink_ret);
-  exit(0);
+  _exit(0);
 }
 
 void init_s_handler(struct sigaction *act) {
+  memset (act, '\0', sizeof(*act));
   act->sa_handler = sigint_handler;
   sigaction(SIGINT, act, NULL);
 }

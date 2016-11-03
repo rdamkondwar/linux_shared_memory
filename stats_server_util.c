@@ -1,9 +1,10 @@
 #include "stats_server.h"
 
 // extern char sem_name[];
-extern sem_t *semaphore;
+sem_t *semaphore;
 extern ssegment_t *shm;
 int client_index;
+char sem_name[1024];
 
 int read_segment(segment_meta_t *shared_seg, int server_iter) {
   // Read first int
@@ -47,6 +48,7 @@ segment_meta_t* initialize_segment(char *addr) {
 char* attach_shared_segment(int shmid) {
   char *p = (char *)shmat(shmid, NULL, 0);
   if ((char *)-1 == p) {
+    // printf("Failed to attach shared memory\n");
     perror("shmat: \n");
     exit(1);
   }
@@ -119,40 +121,44 @@ void get_semaphore_name(int key, char *sem_name) {
   // printf("debug: sem_name=%s\n", sem_name);
 }
 
-sem_t* get_semaphore(int key) {
+// Invoked by client
+void get_semaphore(int key) {
   char sem_name[MAX_KEY_LENGTH];
   get_semaphore_name(key, sem_name);
-  sem_t *semaphore = sem_open(sem_name, 0);
+  semaphore = sem_open(sem_name, 0);
   if (SEM_FAILED == semaphore) {
     perror("Error");
     exit(1);
   }
-  return semaphore;
 }
 
-sem_t* init_semaphore(int key) {
-  char sem_name[MAX_KEY_LENGTH];
-  get_semaphore_name(key, sem_name);
-  sem_t *semaphore = sem_open(sem_name, O_CREAT | O_EXCL, S_IWUSR | S_IRUSR, 1);
-  if (SEM_FAILED == semaphore) {
-    perror("Error");
-    exit(1);
-  }
-  return semaphore;
-}
+/* void init_semaphore(int key) { */
+/*   char sem_name[MAX_KEY_LENGTH]; */
+/*   get_semaphore_name(key, sem_name); */
+/*   semaphore = sem_open(sem_name, O_CREAT | O_EXCL, S_IWUSR | S_IRUSR, 1); */
+/*   if (SEM_FAILED == semaphore) { */
+/*     perror("Error"); */
+/*     exit(1); */
+/*   } */
+/* } */
 
 
 stats_t* stat_init(key_t key) {
   int shmid;
   char *addr;
   segment_meta_t *s_seg;
+
+  get_semaphore(key);
+
   // Acquire lock
   if (sem_wait(semaphore) < 0) {
     fprintf(stderr, "Sem_wait failed!\n");
     return NULL;
   }
   shmid = get_shared_segment(key);
+  // printf("Debug: shmid %d\n", shmid);
   addr = attach_shared_segment(shmid);
+  // printf("addr = %p\n", addr);
   shm = (ssegment_t *)addr;
   s_seg = (segment_meta_t *)addr;
   if (s_seg->init_status == 2) {
@@ -166,24 +172,26 @@ stats_t* stat_init(key_t key) {
         fprintf(stderr, "Sem_post failed!\n");
       }
       // Release lock
-      if (sem_post(semaphore) < 0) {
-	fprintf(stderr, "Sem_post failed!\n");
-	return NULL;
-      }
+      /* if (sem_post(semaphore) < 0) { */
+      /*   fprintf(stderr, "Sem_post failed!\n"); */
+      /*   return NULL; */
+      /* } */
+      sem_close(semaphore);
+      // printf("debug: shm full released lock\n");
       return NULL;
     }
-    
+
     client_index = index;
     s_seg->client_status[index] = 1;
     // printf("debug: Registered client : %d!\n", index);
-    
+
     // Release lock
     if (sem_post(semaphore) < 0) {
       fprintf(stderr, "Sem_post failed!\n");
       return NULL;
     }
 
-    // printf("debug: Released lock!\n");
+    // printf("debug: link - Released lock!\n");
 
     return &(s_seg->client_data[index]);
   }
@@ -205,6 +213,7 @@ stats_unlink(key_t key) {
   // printf("debug: Acquired lock!\n");
   int index = find_current_child_slot(s_seg->client_data);
   if (index > -1) {
+    // printf("Debug release index: %d for pid: %d\n", index, getpid());
     s_seg->client_status[index] = 0;
     int det_ret = shmdt(shm);
     // Release lock
@@ -222,7 +231,7 @@ stats_unlink(key_t key) {
       fprintf(stderr, "Sem_post failed!\n");
       return -1;
   }
-  // printf("debug: Released lock!\n");
+  // printf("debug-error: Released lock!\n");
   sem_close(semaphore);
 
   return -1;
@@ -247,4 +256,14 @@ int find_empty_child_slot(int client_status[]) {
     }
   }
   return -1;
+}
+
+void init_semaphore(int key) {
+  get_semaphore_name(key, sem_name);
+  // Init semaphore
+  semaphore = sem_open(sem_name, O_CREAT | O_EXCL, 0644, 1);
+  if (SEM_FAILED == semaphore) {
+    perror("Error");
+    exit(1);
+  }
 }
