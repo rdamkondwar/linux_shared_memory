@@ -73,7 +73,8 @@ int main(int argc, char *argv[]) {
 void sigint_handler(int signum) {
   // printf("in signal handler\n");
   cleanup();
-  exit(0);
+  fflush(stdout);
+  _exit(0);
 }
 
 void cleanup() {

@@ -16,9 +16,9 @@ looptime(uint64_t time) {
   // init struct for getclocktime
   uint64_t diff;
   struct timespec start, end;
-  clock_gettime(CLOCK_MONOTONIC, &start); /* mark start time */
+  clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start); /* mark start time */
   while (1) {
-    clock_gettime(CLOCK_MONOTONIC, &end); /* mark the end time */
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end); /* mark the end time */
     diff = BILLION * (end.tv_sec - start.tv_sec)
             + end.tv_nsec - start.tv_nsec;
     if (diff >= time) {
@@ -149,7 +149,7 @@ int main(int argc, char *argv[]) {
   // Set Priority
   pid = getpid();
   if (priority > -21) {
-    set_prio_ret = setpriority(which, pid, priority);
+    set_prio_ret = setpriority(which, 0, priority);
     if (set_prio_ret != 0) {
       fprintf(stderr, "Couldn't set the priority %d \n", priority);
       exit(1);
