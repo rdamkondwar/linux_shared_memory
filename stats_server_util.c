@@ -143,7 +143,7 @@ void get_semaphore(int key) {
 /* } */
 
 
-stats_t* stat_init(key_t key) {
+stats_t* stats_init(key_t key) {
   int shmid;
   char *addr;
   segment_meta_t *s_seg;

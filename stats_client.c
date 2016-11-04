@@ -140,7 +140,7 @@ int main(int argc, char *argv[]) {
   // semaphore = get_semaphore(key);
   // printf("got semaphore\n");
 
-  stats_t * c_stats = stat_init((key_t)key);
+  stats_t * c_stats = stats_init((key_t)key);
   if (NULL == c_stats) {
     fprintf(stderr, "Couldn't find segment for process\n");
     exit(1);

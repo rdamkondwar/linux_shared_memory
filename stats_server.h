@@ -57,7 +57,7 @@ void init_semaphore(int key);
 void get_semaphore(int key);
 
 //stats.c
-stats_t* stat_init(key_t key);
+stats_t* stats_init(key_t key);
 int stats_unlink(key_t key);
 int find_empty_child_slot(int client_status[]);
 int find_current_child_slot(stats_t client_data[]);
